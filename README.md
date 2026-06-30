@@ -89,6 +89,8 @@ A production-oriented **Agentic Retrieval-Augmented Generation (RAG)** backend b
 | LLM Gateway | LiteLLM |
 | Vector Database | Qdrant |
 | Database | PostgreSQL (Neon) |
+| Message Broker | RabbitMQ |
+| Task Queue | TaskIQ |
 | Authentication | JWT |
 | Language | Python 3.11+ |
 
@@ -153,21 +155,30 @@ Retrieved Documents
 
 # Document Ingestion Pipeline
 
-```text
-PDF
- │
- ▼
-Chunking
- │
- ▼
-Dense Embedding
- │
- ▼
-Sparse Embedding
- │
- ▼
-Vector Store (Qdrant)
-```
+# Background Processing
+
+Document ingestion is executed asynchronously using **TaskIQ** with **RabbitMQ**.
+
+Pipeline:
+
+PDF Upload
+    │
+    ▼
+FastAPI
+    │
+    ▼
+TaskIQ
+    │
+    ▼
+RabbitMQ
+    │
+    ▼
+Background Worker
+    │
+    ├── Chunk PDF
+    ├── Generate Dense Embeddings
+    ├── Generate Sparse Embeddings
+    └── Store in Qdrant
 
 ---
 
@@ -194,6 +205,9 @@ Each chunk contains metadata similar to:
 - [x] Refresh Token Rotation
 - [x] User Authentication
 - [x] PDF Ingestion
+- [x] Background File Processing
+- [x] TaskIQ Integration
+- [x] RabbitMQ Integration
 - [x] Recursive Chunking
 - [x] Dense Embeddings
 - [x] Sparse Embeddings
@@ -204,6 +218,10 @@ Each chunk contains metadata similar to:
 - [x] User-level Isolation
 - [x] Dependency Injection
 - [x] Async Service Architecture
+- [x] LiteLLM Gateway Integration
+- [x] Automatic Model Fallback
+- [x] Prompt Injection Detection
+- [x] PII Masking
 
 ---
 
@@ -222,8 +240,6 @@ Each chunk contains metadata similar to:
 
 ## Guardrails
 
-- [ ] Prompt Injection Detection
-- [ ] PII Masking
 - [ ] Output Validation
 
 ---
@@ -239,8 +255,6 @@ Each chunk contains metadata similar to:
 
 ## LLM
 
-- [ ] LiteLLM Gateway Integration
-- [ ] Automatic Model Fallback
 - [ ] Streaming Responses
 - [ ] Token Usage Tracking
 
