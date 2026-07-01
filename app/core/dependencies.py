@@ -9,17 +9,25 @@ from app.services.sparse_embedding_service import SparseEmbeddingService
 from app.services.vector_service import VectorService
 from app.services.ingestion_service import IngestionService
 from app.services.search_service import SearchService
-from app.guardrails.pii_masking_service import PromptInjectionService
-from app.guardrails.prompt_injection_service import PIIMaskingService
+from app.services.llm_service import LLMService
+from app.services.rerank_service import RerankService
+from app.services.context_builder_service import ContextBuilderService
+from app.services.graph_service import GraphService
+
 
 chunking_service = ChunkingService()
 embedding_service = EmbeddingService()
 sparse_service = SparseEmbeddingService()
 vector_service = VectorService()
 
-prompt_injection_service = PromptInjectionService()
-pii_masking_service = PIIMaskingService()
 
+rerank_service = RerankService()
+context_builder_service = ContextBuilderService()
+
+
+llm_service = LLMService()
+
+graph_service = GraphService()
 
 def create_ingestion_service():
     return IngestionService(

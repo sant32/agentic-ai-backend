@@ -14,6 +14,8 @@
 #     asyncio.run(main())
 
 import asyncio
+
+from taskiq import result
 # test_chunking_service.py
 from app.services.chunking_service import ChunkingService  # Update import path
 from app.services.embedding_service import EmbeddingService
@@ -23,9 +25,34 @@ from app.services.search_service import SearchService
 from langchain_core.documents import Document
 from pathlib import Path
 from app.core.dependencies import get_search_service, prompt_injection_service, pii_masking_service
-
+from app.graph.builder import build_graph
 
 from qdrant_client.models import Filter, FieldCondition, MatchValue
+from app.graph.nodes.rerank_node import rerank_node
+from app.graph.nodes.context_builder import context_builder_node
+
+
+from app.graph.builder import build_graph
+
+
+async def builder():
+    graph = build_graph()
+
+    state = {
+        "user_id": "123",
+        "conversation_id": None,
+        "query": "How does jwt work?",
+        "masked_query": "",
+        "is_prompt_attack": False,
+        "attack_reason": None,
+        "rewritten_query": "",
+        "error": None,
+    }
+
+    result = await graph.ainvoke(state)
+
+    print(result)
+
 
 # def test_chunk_text():
 #     """Test basic text chunking."""
@@ -209,6 +236,147 @@ def test1():
 
     print(pii)
 
+
+from app.graph.nodes.retrieve_node import retrieve_node 
+from app.pydanticModels.models import RetrievedChunk
+from app.graph.nodes.generate import generate_node
+async def get():
+
+    state = {
+        "query": "How does jwt work?",
+        "masked_query": "How does jwt work?",
+        "rewritten_query": "How does jwt work?",
+        "user_id": 11
+    }
+
+    result = await retrieve_node(state)
+    print(result)
+
+async def rerank():
+
+    state = {
+        "query": "How does jwt work?",
+        "masked_query": "How does jwt work?",
+        "rewritten_query": "How does jwt work?",
+        "user_id": 11,
+        "retrieved_chunks": [
+            RetrievedChunk(
+                chunk_id="1",
+                document_id="doc1",
+                file_name="file1.txt",
+                page=1,
+                score=0.9,
+                content="JWT is a JSON Web Token used for authentication"
+            ),
+            RetrievedChunk(
+                chunk_id="4",
+                document_id="doc4",
+                file_name="file4.txt",
+                page=4,
+                score=0.6,
+                content="FastAPI is a web framework for building APIs"
+            ),
+            RetrievedChunk(
+                chunk_id="5",
+                document_id="doc5",
+                file_name="file5.txt",
+                page=5,
+                score=0.5,
+                content="LangChain is a framework for building applications with LLMs"
+            ),
+            RetrievedChunk(
+                chunk_id="2",
+                document_id="doc2",
+                file_name="file2.txt",
+                page=2,
+                score=0.8,
+                content="Python is a programming language"
+            ),
+            RetrievedChunk(
+                chunk_id="3",
+                document_id="doc3",
+                file_name="file3.txt",
+                page=3,
+                score=0.7,
+                content="JWT contains header, payload, and signature"
+            ),
+        ]
+
+    }
+    result = await rerank_node(state)
+    print(len(result["reranked_chunks"]))
+    for chunk in result["reranked_chunks"]:
+        print(f"Chunk ID: {chunk.chunk_id}, Score: {chunk.score}, Content: {chunk.content}")
+    # print(result)
+
+
+async def context_builder():
+    state = {
+        "query": "How does jwt work?",
+        "masked_query": "How does jwt work?",
+        "rewritten_query": "How does jwt work?",
+        "user_id": 11,
+        "retrieved_chunks": [
+            RetrievedChunk(
+                chunk_id="1",
+                document_id="doc1",
+                file_name="file1.txt",
+                page=1,
+                score=0.9,
+                content="JWT is a JSON Web Token used for authentication"
+            ),
+            RetrievedChunk(
+                chunk_id="4",
+                document_id="doc4",
+                file_name="file4.txt",
+                page=4,
+                score=0.6,
+                content="FastAPI is a web framework for building APIs"
+            ),
+            RetrievedChunk(
+                chunk_id="5",
+                document_id="doc5",
+                file_name="file5.txt",
+                page=5,
+                score=0.5,
+                content="LangChain is a framework for building applications with LLMs"
+            ),
+            RetrievedChunk(
+                chunk_id="2",
+                document_id="doc2",
+                file_name="file2.txt",
+                page=2,
+                score=0.8,
+                content="Python is a programming language"
+            ),
+            RetrievedChunk(
+                chunk_id="3",
+                document_id="doc3",
+                file_name="file3.txt",
+                page=3,
+                score=0.7,
+                content="JWT contains header, payload, and signature"
+            ),
+        ]
+
+    }
+    result = await context_builder_node(state)
+    print(result)
+
+async def generate():
+
+    state = {
+        "query": "How does jwt work?",
+        "masked_query": "How does jwt work?",
+        "rewritten_query": "How does jwt work?",
+        "user_id": 11,
+        "context": """
+WT contains header, payload, and signature')], 'context': 'Source: file1.txt\nPage: 1\n\nJWT is a JSON Web Token used for authentication\n\n\n------------------------------\n\nSource: file4.txt\nPage: 4\n\nFastAPI is a web framework for building APIs\n\n\n------------------------------\n\nSource: file5.txt\nPage: 5\n\nLangChain is a framework for building applications with LLMs\n\n\n------------------------------\n\nSource: file2.txt\nPage: 2\n\nPython is a programming language\n\n\n------------------------------\n\nSource: file3.txt\nPage: 3\n\nJWT contains header, payload, and signature\n
+"""
+    }
+    result = await generate_node(state)
+    print(result)
+
 async def main():
     """Run all tests."""
     # print("=" * 50)
@@ -218,7 +386,14 @@ async def main():
     # result = await test_chunking_embeddings()
     # print(result)
     # await hybrid_search_semantic()
-    test1()
+    # test1()
+
+    # await rewriteQ()
+    # await builder()
+    # await get()
+    # await rerank()
+    # await context_builder()
+    await generate()
     
     # print("1. Testing basic text chunking:")
     # test_chunk_text()

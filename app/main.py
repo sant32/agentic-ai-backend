@@ -4,6 +4,7 @@ from fastapi import FastAPI
 
 from app.routes.ingestion import router as ingestion_router
 from app.routes.auth import router as auth_router
+from app.routes.search import router as search_router
 from app.db.session import init_db
 from app.tasks.broker import broker
 
@@ -11,7 +12,7 @@ from app.tasks.broker import broker
 async def lifespan(app: FastAPI):
     # Startup
     print("🚀 Starting RAG API...")
-    await broker.startup()
+    # await broker.startup() 
     # Example:
     # await redis_client.ping()
     # await vector_service.create_collection_if_not_exists()
@@ -19,7 +20,7 @@ async def lifespan(app: FastAPI):
     await init_db()
     yield
 
-    await broker.shutdown()
+    # await broker.shutdown()
     # Shutdown
     print("🛑 Shutting down RAG API...")
 
@@ -43,4 +44,10 @@ app.include_router(
     auth_router,
     prefix="/api",
     tags=["auth"]   
+)
+
+app.include_router(
+    search_router,
+    prefix="/api",
+    tags=["search"]
 )

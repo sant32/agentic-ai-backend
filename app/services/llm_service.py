@@ -1,7 +1,7 @@
 from langchain_litellm import ChatLiteLLM
 from pydantic import BaseModel
 
-class LLMService:
+class LLMService: 
 
     def __init__(self):
 
@@ -20,16 +20,15 @@ class LLMService:
     async def generate(
         self,
         messages,
-        schema: type[BaseModel],
-        **kwargs
+        schema: type[BaseModel] | None = None,
+        **kwargs,
     ):
-        
-        structured_llm = self.llm.with_structured_output(schema)
+        llm = self.llm
+        if schema:
+            llm = llm.with_structured_output(schema)
 
-        response = await structured_llm.ainvoke(
+        return await llm.ainvoke(
             messages,
             **kwargs
         )
 
-
-        return response

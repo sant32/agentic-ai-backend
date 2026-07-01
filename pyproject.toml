@@ -7,6 +7,7 @@ requires-python = ">=3.11"
 dependencies = [
     "aio-pika>=9.6.2",
     "asyncpg>=0.31.0",
+    "cohere>=7.0.5",
     "fastapi>=0.138.0",
     "fastembed>=0.8.0",
     "greenlet>=3.5.2",
@@ -15,6 +16,7 @@ dependencies = [
     "langchain-litellm>=0.7.0",
     "langchain-qdrant>=1.1.0",
     "langgraph>=1.2.6",
+    "langsmith>=0.9.1",
     "psycopg2-binary>=2.9.12",
     "pwdlib[argon2]>=0.3.0",
     "pydantic[email]>=2.13.4",

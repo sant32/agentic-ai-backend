@@ -13,6 +13,8 @@ from qdrant_client.models import (
     SparseVectorParams,
     VectorParams,
     Filter,
+    FieldCondition,
+    MatchValue,
     NamedVector,
     NamedSparseVector,
     Prefetch,
@@ -174,13 +176,25 @@ class VectorService:
 
             )
 
+
+    def _build_filter(self, user_id: int) -> Filter:
+
+        return Filter(
+            must=[
+                FieldCondition(
+                    key="user_id",
+                    match=MatchValue(value=user_id),
+                )
+            ]
+        )
+
     async def search(
         self,
         dense_vector: List[float],
         sparse_vector: dict | None = None,
         top_k : int = 6,
         search_type: str = "hybrid",
-        filters: Filter | None = None,
+        user_id: int | None = None,
     ):
         
         print("Searching")
@@ -188,14 +202,14 @@ class VectorService:
             return await self._dense_search(
                 dense_vector=dense_vector,
                 top_k=top_k,
-                filters=filters,
+                filters=self._build_filter(user_id) if user_id is not None else None,
             )
 
         return await self._hybrid_search(
             dense_vector=dense_vector,
             sparse_vector=sparse_vector,
             top_k=top_k,
-            filters=filters,
+            filters=self._build_filter(user_id) if user_id is not None else None,
         )
         
     

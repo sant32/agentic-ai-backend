@@ -1,26 +1,39 @@
-import re
 
+class PromptInjectionService:
 
-class PIIMaskingService:
+    BLOCKED_PATTERNS = [
+        "ignore previous instructions",
+        "ignore all instructions",
+        "forget previous instructions",
+        "reveal system prompt",
+        "show system prompt",
+        "print system prompt",
+        "developer message",
+        "execute code",
+        "run shell command",
+        "bypass safety",
+    ]
 
-    EMAIL_PATTERN = re.compile(
-        r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"
-    )
+    def detect(
+        self,
+        text: str,
+    ) -> bool:
 
-    PHONE_PATTERN = re.compile(
-        r"\b\d{10}\b"
-    )
+        text = text.lower()
 
-    def mask(self, text: str) -> str:
+        for pattern in self.BLOCKED_PATTERNS:
 
-        text = self.EMAIL_PATTERN.sub(
-            "[EMAIL]",
-            text,
-        )
+            if pattern in text:
+                return True
 
-        text = self.PHONE_PATTERN.sub(
-            "[PHONE]",
-            text,
-        )
+        return False
 
-        return text
+    def validate(
+        self,
+        text: str,
+    ):
+
+        if self.detect(text):
+            raise ValueError(
+                "Prompt injection attempt detected."
+            )

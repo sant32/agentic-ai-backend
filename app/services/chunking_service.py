@@ -1,3 +1,4 @@
+import re
 from __future__ import annotations
 
 from uuid import uuid4
@@ -39,6 +40,23 @@ class ChunkingService:
         )
 
 
+    def _clean_text(self, text: str) -> str:
+        text = text.replace("\r\n", "\n")
+        text = text.replace("\u00A0", " ")
+
+        # Remove spaces around newlines
+        text = re.sub(r"[ \t]*\n[ \t]*", "\n", text)
+
+        # Join single newlines into spaces
+        text = re.sub(r"(?<!\n)\n(?!\n)", " ", text)
+
+        # Keep paragraph breaks
+        text = re.sub(r"\n{2,}", "\n\n", text)
+
+        # Collapse whitespace
+        text = re.sub(r"\s+", " ", text)
+
+        return text.strip()
 
     @staticmethod
     def _generate_document_id(source: str) -> str:
@@ -79,6 +97,9 @@ class ChunkingService:
         loader = PyPDFLoader(pdf_path)
 
         documents = loader.load()
+
+        for doc in documents:
+            doc.page_content = self._clean_text(doc.page_content)
 
         chunks = self.splitter.split_documents(documents)
 
